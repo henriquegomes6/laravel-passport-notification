@@ -1,0 +1,27 @@
+version: "3.7"
+
+volumes:
+  mysql-data:
+
+services:
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - 'mysql-data:/var/lib/mysql'
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=homestead
+      - MYSQL_DATABASE=homestead
+      - MYSQL_USER=homestead
+      - MYSQL_PASSWORD=secret
+
+  app:
+    image: ambientum/php:7.3-nginx
+    container_name: laravel-passport-notification
+    volumes:
+      - .:/var/www/app
+    ports:
+      - "80:8080"
+    links:
+      - mysql
