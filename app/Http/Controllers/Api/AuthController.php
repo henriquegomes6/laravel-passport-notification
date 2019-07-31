@@ -15,13 +15,17 @@ class AuthController extends Controller
     private $user;
     /** @var ResponseFactory */
     private $responseFactory;
+    /** @var Carbon */
+    private $carbon;
 
     public function __construct(
         User $user,
-        ResponseFactory $responseFactory
+        ResponseFactory $responseFactory,
+        Carbon $carbon
     ) {
         $this->user            = $user;
         $this->responseFactory = $responseFactory;
+        $this->carbon          = $carbon;
     }
 
     public function register(Request $request)
@@ -43,14 +47,13 @@ class AuthController extends Controller
     public function verifyToken(string $token)
     {
         $this->user = $this->user->where('activation_token', $token)->first();
-
         if (!$this->user) {
             return $this->responseFactory->json([
-                'message' => 'token_invalid',
+                'message' => 'invalid token',
             ], 403);
         }
 
-        $this->user->email_verified_at = now();
+        $this->user->email_verified_at = $this->carbon->now();
 
         $this->user->save();
         return $this->responseFactory->json(null, 200);
@@ -58,33 +61,40 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $loginData = $request->validate([
-            'email'       => 'required|email',
-            'password'    => 'required',
-            'remember_me' => 'boolean',
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
         ]);
 
-        if (!Auth::attempt($loginData)) {
+        $auth = Auth::attempt([
+            'email'    => $request['email'],
+            'password' => $request['password'],
+        ]);
+
+        if (!$auth) {
             return $this->responseFactory->json([
                 'message' => 'Invalid data',
             ], 401);
         }
 
-        $user = $request->user();
+        $user = Auth::user();
+        if (!$user->email_verified_at) {
+            return $this->responseFactory->json([
+                'message' => 'check your emaill',
+            ], 401);
+        }
 
         $tokenResult = $user->createToken('token');
         $token       = $tokenResult->token;
 
-        if ($request->remember_me) {
-            $token->expires_at = Carbon::now()->addWeeks(1);
-        }
+        $token->expires_at = $this->carbon->now()->addWeeks(1);
 
         $token->save();
 
         return $this->responseFactory->json([
             'access_token' => $tokenResult->accessToken,
             'token_type'   => 'Bearer',
-            'expires_at'   => Carbon::parse($tokenResult->token->expires_at)->toDateTimeString(),
+            'expires_at'   => $this->carbon->parse($tokenResult->token->expires_at)->toDateTimeString(),
         ]);
     }
 }

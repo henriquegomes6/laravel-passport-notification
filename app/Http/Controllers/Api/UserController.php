@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Routing\ResponseFactory;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class UserController extends Controller
 {
+    /** @var User */
+    private $user;
     /** @var ResponseFactory */
     private $responseFactory;
 
@@ -16,12 +19,16 @@ class UserController extends Controller
         User $user,
         ResponseFactory $responseFactory
     ) {
+        $this->user            = $user;
         $this->responseFactory = $responseFactory;
     }
 
     public function getMe(Request $request)
     {
-        return $this->responseFactory->json($request->user(), 200);
+        return $this->responseFactory->json(
+            $this->findMe($request->user()->id),
+            200
+        );
     }
 
     public function update(Request $request)
@@ -30,19 +37,33 @@ class UserController extends Controller
             'name' => 'required|max:55',
         ]);
 
-        $request->user()->name = $request->name;
-        $request->user()->save();
+        $user       = $this->findMe($request->user()->id);
+        $user->name = $request->name;
+        $user->save();
 
         return $this->responseFactory->json(
-            $request->user()
+            $user
             , 200
         );
     }
 
     public function delete(Request $request)
     {
-        $request->user()->delete();
+        $user = $this->findMe($request->user()->id);
+
+        $user->delete();
 
         return $this->responseFactory->json(null, 200);
+    }
+
+    private function findMe(int $id)
+    {
+        $user = $this->user->find($id);
+
+        if (!$user) {
+            throw new NotFoundHttpException();
+        }
+
+        return $user;
     }
 }
