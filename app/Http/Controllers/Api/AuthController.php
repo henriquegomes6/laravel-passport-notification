@@ -5,7 +5,6 @@ use App\Http\Controllers\Controller;
 use App\Notifications\VerifyEmail;
 use App\User;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Routing\ResponseFactory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;

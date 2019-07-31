@@ -34,3 +34,13 @@ services:
     ports:
       - '1025:1025'
       - '8025:8025'
+
+  worker:
+    image: ambientum/php:7.3
+    command: 'php artisan queue:work'
+    volumes:
+      - .:/var/www/app
+    links:
+      - mysql
+      - redis
+      - mailhog

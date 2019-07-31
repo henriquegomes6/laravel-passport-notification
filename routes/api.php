@@ -22,11 +22,19 @@ Route::post('/login', 'Api\AuthController@login');
 Route::get('/verify/{token}', 'Api\AuthController@verifyToken');
 
 Route::group([
-    'namespace'  => 'user',
     'middleware' => 'auth:api',
     'prefix'     => 'user',
 ], function () {
-    Route::get('/', function (Request $request) {
-        return $request->user();
+    Route::get('/', 'Api\UserController@getMe');
+    Route::put('/', 'Api\UserController@update');
+    Route::delete('/', 'Api\UserController@delete');
+});
+
+Route::group([
+    'middleware' => 'auth:api',
+    'prefix'     => 'wellcome',
+], function () {
+    Route::get('/', function () {
+        return view('welcome');
     });
 });
