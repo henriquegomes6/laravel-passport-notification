@@ -3,9 +3,9 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 class VerifyEmail extends Notification implements ShouldQueue
 {
@@ -40,7 +40,7 @@ class VerifyEmail extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
-        $url = url('/api/verify/' . $notifiable->activation_token);
+        $url = url(env('FRONT_URL') . '/verify/' . $notifiable->activation_token);
 
         return (new MailMessage)
             ->subject('Verify your email')
